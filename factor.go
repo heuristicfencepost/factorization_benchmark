@@ -6,30 +6,41 @@
 
 package main
 
+import "fmt"
+import "flag"
+
 // Send the sequence 2, 3, 4, ... to channel 'ch'.
-func Generate(ch chan<- int) {
-	for i := 2; ; i++ {
+func Generate(max int, ch chan<- int) {
+	fmt.Printf("Generating primes less than or equal to %d \n",max)
+
+	// Slight optimization; after 2 we know there are no even primes so we only
+	// need to consider odd values
+	ch <- 2
+	for i := 3; i<max ; i += 2 {
 		ch <- i // Send 'i' to channel 'ch'.
 	}
+	fmt.Printf("Sending -1");
+	ch <- -1 // Use -1 as an indicator that we're done now
 }
 
 // Copy the values from channel 'in' to channel 'out',
 // removing those divisible by 'prime'.
 func Filter(in <-chan int, out chan<- int, prime int) {
-	for {
-		i := <-in // Receive value of new variable 'i' from 'in'.
-		if i%prime != 0 {
+	for i := <- in; i != -1; i = <- in {
+
+		if i % prime != 0 {
 			out <- i // Send 'i' to channel 'out'.
 		}
 	}
+	fmt.Printf("Terminating prime %d \n",prime)
+	out <- -1
 }
 
 // The prime sieve: Daisy-chain Filter processes together.
-func Sieve() {
+func Sieve(max int) {
 	ch := make(chan int) // Create a new channel.
-	go Generate(ch)      // Start Generate() as a subprocess.
-	for {
-		prime := <-ch
+	go Generate(max,ch)      // Start Generate() as a subprocess.
+	for prime := <-ch; prime != -1; prime = <-ch {
 		print(prime, "\n")
 		ch1 := make(chan int)
 		go Filter(ch, ch1, prime)
@@ -38,5 +49,8 @@ func Sieve() {
 }
 
 func main() {
-	Sieve()
+
+	var max *int = flag.Int("max",1,"Maximum number we wish to return")
+	flag.Parse()
+	Sieve(*max)
 }
