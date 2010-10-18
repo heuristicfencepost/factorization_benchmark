@@ -6,12 +6,10 @@
 
 package main
 
-import "fmt"
 import "flag"
 
 // Send the sequence 2, 3, 4, ... to channel 'ch'.
 func Generate(max int, ch chan<- int) {
-	fmt.Printf("Generating primes less than or equal to %d \n",max)
 
 	// Slight optimization; after 2 we know there are no even primes so we only
 	// need to consider odd values
@@ -19,7 +17,6 @@ func Generate(max int, ch chan<- int) {
 	for i := 3; i<=max ; i += 2 {
 		ch <- i // Send 'i' to channel 'ch'.
 	}
-	fmt.Printf("Sending -1");
 	ch <- -1 // Use -1 as an indicator that we're done now
 }
 
@@ -32,7 +29,6 @@ func Filter(in <-chan int, out chan<- int, prime int) {
 			out <- i // Send 'i' to channel 'out'.
 		}
 	}
-	fmt.Printf("Terminating prime %d \n",prime)
 	out <- -1
 }
 
