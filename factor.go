@@ -8,18 +8,19 @@ package main
 
 import "fmt"
 import "flag"
+import vector "container/vector"
 
 // Send the sequence 2, 3, 4, ... to channel 'ch'.
 func Generate(max int, ch chan<- int) {
-	fmt.Printf("Generating primes less than or equal to %d \n",max)
+	//fmt.Printf("Generating primes less than or equal to %d \n",max)
 
 	// Slight optimization; after 2 we know there are no even primes so we only
 	// need to consider odd values
 	ch <- 2
-	for i := 3; i<max ; i += 2 {
+	for i := 3; i<=max ; i += 2 {
 		ch <- i // Send 'i' to channel 'ch'.
 	}
-	fmt.Printf("Sending -1");
+	//fmt.Printf("Sending -1");
 	ch <- -1 // Use -1 as an indicator that we're done now
 }
 
@@ -32,25 +33,39 @@ func Filter(in <-chan int, out chan<- int, prime int) {
 			out <- i // Send 'i' to channel 'out'.
 		}
 	}
-	fmt.Printf("Terminating prime %d \n",prime)
+	//fmt.Printf("Terminating prime %d \n",prime)
 	out <- -1
-}
-
-// The prime sieve: Daisy-chain Filter processes together.
-func Sieve(max int) {
-	ch := make(chan int) // Create a new channel.
-	go Generate(max,ch)      // Start Generate() as a subprocess.
-	for prime := <-ch; prime != -1; prime = <-ch {
-		print(prime, "\n")
-		ch1 := make(chan int)
-		go Filter(ch, ch1, prime)
-		ch = ch1
-	}
 }
 
 func main() {
 
-	var max *int = flag.Int("max",1,"Maximum number we wish to return")
+	var target *int = flag.Int("target",1,"Number we wish to factor")
 	flag.Parse()
-	Sieve(*max)
+
+	t := *target
+	fmt.Printf("Target: %d\n",t)
+
+	var rv vector.IntVector
+
+	// Retrieve a prime value and see if we can divide the target evenly by
+	// that prime.  If so perform the multiplication and update the current
+	// value.
+	ch := make(chan int) // Create a new channel.
+	go Generate(t,ch)      // Start Generate() as a subprocess.
+	for prime := <-ch; prime != -1; prime = <-ch {
+
+		for ;t % prime == 0; {
+			t = t / prime
+			rv.Push(prime)
+		}
+
+		// Create a goroutine for each prime number whether we use it or
+		// not.  This performs the daisy chaining setup that was being
+		// done by the Sieve() function in sieve.go.
+		ch1 := make(chan int)
+		go Filter(ch, ch1, prime)
+		ch = ch1
+	}
+
+	fmt.Printf("Results: %s\n",fmt.Sprint(rv))
 }

@@ -16,7 +16,7 @@ func Generate(max int, ch chan<- int) {
 	// Slight optimization; after 2 we know there are no even primes so we only
 	// need to consider odd values
 	ch <- 2
-	for i := 3; i<max ; i += 2 {
+	for i := 3; i<=max ; i += 2 {
 		ch <- i // Send 'i' to channel 'ch'.
 	}
 	fmt.Printf("Sending -1");
