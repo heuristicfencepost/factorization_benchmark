@@ -1,8 +1,9 @@
-// $G $F.go && $L $F.$A  # don't run it - goes forever
-
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
+
+// Prime factorization derived from slightly modified version of
+// sieve.go in Go source distribution.
 
 package main
 
@@ -12,7 +13,6 @@ import vector "container/vector"
 
 // Send the sequence 2, 3, 4, ... to channel 'ch'.
 func Generate(max int, ch chan<- int) {
-	//fmt.Printf("Generating primes less than or equal to %d \n",max)
 
 	// Slight optimization; after 2 we know there are no even primes so we only
 	// need to consider odd values
@@ -20,7 +20,6 @@ func Generate(max int, ch chan<- int) {
 	for i := 3; i<=max ; i += 2 {
 		ch <- i // Send 'i' to channel 'ch'.
 	}
-	//fmt.Printf("Sending -1");
 	ch <- -1 // Use -1 as an indicator that we're done now
 }
 
@@ -30,10 +29,9 @@ func Filter(in <-chan int, out chan<- int, prime int) {
 	for i := <- in; i != -1; i = <- in {
 
 		if i % prime != 0 {
-			out <- i // Send 'i' to channel 'out'.
+			out <- i
 		}
 	}
-	//fmt.Printf("Terminating prime %d \n",prime)
 	out <- -1
 }
 
@@ -43,8 +41,6 @@ func main() {
 	flag.Parse()
 
 	t := *target
-	fmt.Printf("Target: %d\n",t)
-
 	var rv vector.IntVector
 
 	// Retrieve a prime value and see if we can divide the target evenly by
@@ -52,7 +48,7 @@ func main() {
 	// value.
 	ch := make(chan int) // Create a new channel.
 	go Generate(t,ch)      // Start Generate() as a subprocess.
-	for prime := <-ch; prime != -1; prime = <-ch {
+	for prime := <-ch; (prime != -1) && (t > 1); prime = <-ch {
 
 		for ;t % prime == 0; {
 			t = t / prime
