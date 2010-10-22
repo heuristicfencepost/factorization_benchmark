@@ -1,0 +1,4 @@
+* Overview
+
+An implementation of the concurrency benchmark suggested by [[http://www.google.com/buzz/alex.tkachman/J8oSTjegB5F/Call-for-concurrency-benchmark-There-are-a-lot-of][Alex Tkachman]] for JVM languages.  Current implementation is for Google's Go language (which does not make use of
+the JVM); other implementations may follow.
